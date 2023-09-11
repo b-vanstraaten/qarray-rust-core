@@ -5,6 +5,9 @@ build-backend = "maturin"
 [project]
 name = "rusty_capacitance_model_core"
 requires-python = ">=3.7"
+authors = [
+    {name = 'Barnaby van Straaten', email = 'barnaby.vanstraaten@kellogg.ox.ac.uk'}
+]
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
