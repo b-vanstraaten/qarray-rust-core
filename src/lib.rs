@@ -16,7 +16,6 @@ fn rusty_capacitance_model_core(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     // We are having the Python as input with a lifetime parameter.
     // Basically, none of the data that comes from Python can survive
     // longer than Python itself. Therefore, if Python is dropped, so must our Rust Python-dependent variables.
-    // #[pyfn(m)]
 
     fn ground_state_0d<'py>(py: Python<'py>,
                             v_g: PyReadonlyArray1<f64>,
