@@ -8,7 +8,7 @@ use pyo3::prelude::{pymodule, PyModule, PyResult, Python};
 
 // The name of the module must be the same as the rust package name
 #[pymodule]
-fn constant_capacitance_model_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
+fn rusty_capacitance_model_core(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     // This is a pure function (no mutations of incoming data).
     // You can see this as the python array in the function arguments is readonly.
     // The object we return will need ot have the same lifetime as the Python.
