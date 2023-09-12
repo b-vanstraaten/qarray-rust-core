@@ -14,6 +14,10 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
 
+[project.urls]
+Homepage = 'https://github.com/b-vanstraaten/rusty_capacitance_model_core'
+
+
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
