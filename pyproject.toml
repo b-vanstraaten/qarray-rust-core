@@ -8,10 +8,14 @@ requires-python = ">=3.7"
 authors = [
     {name = 'Barnaby van Straaten', email = 'barnaby.vanstraaten@kellogg.ox.ac.uk'}
 ]
+
+operating-systems = ["any"]
+
 classifiers = [
+    "Topic :: Scientific/Engineering :: Physics",
+    "Operating System :: OS Independent",
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
-    "Programming Language :: Python :: Implementation :: PyPy",
 ]
 
 [project.urls]
