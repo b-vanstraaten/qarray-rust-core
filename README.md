@@ -1,6 +1,6 @@
 # Rusty Capacitance Model Core
 
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/b-vanstraaten/rusty_capacitance_model_core/CI)
+![GitHub Workflow Status](https://github.com/b-vanstraaten/rusty_capacitance_model_core/workflows/CI/badge.svg)
 ![PyPI](https://img.shields.io/pypi/v/quantum-dot-simulator)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/quantum-dot-simulator)
 
