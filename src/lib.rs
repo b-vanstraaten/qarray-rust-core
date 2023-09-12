@@ -17,32 +17,12 @@ fn rusty_capacitance_model_core(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     // Basically, none of the data that comes from Python can survive
     // longer than Python itself. Therefore, if Python is dropped, so must our Rust Python-dependent variables.
 
-    fn ground_state_0d<'py>(py: Python<'py>,
-                            v_g: PyReadonlyArray1<f64>,
-                            c_gd: PyReadonlyArray2<f64>,
-                            c_dd_inv: PyReadonlyArray2<f64>,
-                            tolerance: f64,
-    ) -> &'py PyArray1<f64> {
-        // Here we have a numpy array of dynamic size. But we could restrict the
-        // function to only take arrays of certain size
-        // e.g. We could say PyReadonlyArray3 and only take 3 dim arrays.
-        // These functions will also do type checking so a
-        // numpy array of type np.float32 will not be accepted and will
-        // yield an Exception in Python as expected
-        let v_g = v_g.as_array();
-        let c_gd = c_gd.as_array();
-        let c_dd_inv = c_dd_inv.as_array();
-
-        let result_array = rust_fn::ground_state_0d(v_g, c_gd, c_dd_inv, tolerance);
-        result_array.into_pyarray(py)
-    }
-
     #[pyfn(m)]
-    fn ground_state_1d<'py>(py: Python<'py>,
-                            v_g: PyReadonlyArray2<f64>,
-                            c_gd: PyReadonlyArray2<f64>,
-                            c_dd_inv: PyReadonlyArray2<f64>,
-                            tolerance: f64,
+    fn ground_state<'py>(py: Python<'py>,
+                         v_g: PyReadonlyArray2<f64>,
+                         c_gd: PyReadonlyArray2<f64>,
+                         c_dd_inv: PyReadonlyArray2<f64>,
+                         tolerance: f64,
     ) -> &'py PyArray2<f64> {
         let v_g = v_g.as_array();
         let c_gd = c_gd.as_array();
@@ -53,13 +33,13 @@ fn rusty_capacitance_model_core(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     }
 
     #[pyfn(m)]
-    fn ground_state_1d_isolated<'py>(py: Python<'py>,
-                                     v_g: PyReadonlyArray2<f64>,
-                                     n_charge: f64,
-                                     c_gd: PyReadonlyArray2<f64>,
-                                     cdd: PyReadonlyArray2<f64>,
-                                     c_dd_inv: PyReadonlyArray2<f64>,
-                                     tolerance: f64,
+    fn ground_state_isolated<'py>(py: Python<'py>,
+                                  v_g: PyReadonlyArray2<f64>,
+                                  n_charge: f64,
+                                  c_gd: PyReadonlyArray2<f64>,
+                                  cdd: PyReadonlyArray2<f64>,
+                                  c_dd_inv: PyReadonlyArray2<f64>,
+                                  tolerance: f64,
     ) -> &'py PyArray2<f64> {
         let v_g = v_g.as_array();
         let c_gd = c_gd.as_array();
