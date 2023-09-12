@@ -6,6 +6,9 @@
 
 **Quantum Dot Constant Capacitance Simulator** is a high-performance Python package that leverages the power of Rust and Rayon to provide a fully parallelised and optimised simulation environment for quantum dots with constant capacitance.
 
+***This package provides core functionality; it is not intended that the user will interact with it directly.***
+
+
 ## Features
 
 - **Ultra-fast Simulation:** Harnesses the speed of Rust and the parallelism of Rayon to deliver lightning-fast simulations.
