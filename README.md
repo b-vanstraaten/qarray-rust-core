@@ -7,14 +7,11 @@
 
 **This package provides core functionality; it is not intended that the user will interact with it directly.**
 
-
 ## Features
 
 - **Ultra-fast Simulation:** Harnesses the speed of Rust and the parallelism of Rayon to deliver lightning-fast simulations.
 - **Constant Capacitance:** Specialized for simulating quantum dots with constant capacitance, allowing precise modelling of charge dynamics.
 - **User-Friendly:** Designed with ease of use in mind, making it accessible to both experts and newcomers in quantum dot simulations.
-- **Customisation:** Easily tailor simulation parameters and initial conditions to suit your specific research needs.
-- **Integration:** Seamlessly integrate the simulator into your existing quantum physics or nanotechnology research pipeline.
 - **Extensive Documentation:** Comprehensive documentation and examples to help you get started quickly.
 
 ## Installation
