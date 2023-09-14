@@ -22,13 +22,13 @@ fn rusty_capacitance_model_core(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
                          v_g: PyReadonlyArray2<f64>,
                          c_gd: PyReadonlyArray2<f64>,
                          c_dd_inv: PyReadonlyArray2<f64>,
-                         tolerance: f64,
+                         threshold: f64,
     ) -> &'py PyArray2<f64> {
         let v_g = v_g.as_array();
         let c_gd = c_gd.as_array();
         let c_dd_inv = c_dd_inv.as_array();
 
-        let results_array = rust_fn::ground_state_1d(v_g, c_gd, c_dd_inv, tolerance);
+        let results_array = rust_fn::ground_state_1d(v_g, c_gd, c_dd_inv, threshold);
         results_array.into_pyarray(py)
     }
 
@@ -39,14 +39,14 @@ fn rusty_capacitance_model_core(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
                                   c_gd: PyReadonlyArray2<f64>,
                                   cdd: PyReadonlyArray2<f64>,
                                   c_dd_inv: PyReadonlyArray2<f64>,
-                                  tolerance: f64,
+                                  threshold: f64,
     ) -> &'py PyArray2<f64> {
         let v_g = v_g.as_array();
         let c_gd = c_gd.as_array();
         let c_dd = cdd.as_array();
         let c_dd_inv = c_dd_inv.as_array();
 
-        let results_array = rust_fn::ground_state_1d_isolated(v_g, n_charge, c_gd, c_dd, c_dd_inv, tolerance);
+        let results_array = rust_fn::ground_state_1d_isolated(v_g, n_charge, c_gd, c_dd, c_dd_inv, threshold);
         results_array.into_pyarray(py)
     }
 
@@ -69,7 +69,7 @@ mod rust_fn {
         v_g: ArrayView<'a, f64, Ix2>,
         c_gd: ArrayView<'a, f64, Ix2>,
         c_dd_inv: ArrayView<'a, f64, Ix2>,
-        tolerance: f64,
+        threshold: f64,
     ) -> Array<f64, Ix2> {
         let n = v_g.shape()[0];
         let m = c_gd.shape()[0];
@@ -79,7 +79,7 @@ mod rust_fn {
 
         rows.par_iter_mut().enumerate().for_each(|(j, result_row)| {
             let v_g_row = v_g.slice(s![j, ..]);
-            let n_charge = ground_state_0d(v_g_row, c_gd, c_dd_inv, tolerance);
+            let n_charge = ground_state_0d(v_g_row, c_gd, c_dd_inv, threshold);
             result_row.assign(&n_charge);
         });
 
@@ -92,7 +92,7 @@ mod rust_fn {
         c_gd: ArrayView<'a, f64, Ix2>,
         c_dd: ArrayView<'a, f64, Ix2>,
         c_dd_inv: ArrayView<'a, f64, Ix2>,
-        tolerance: f64,
+        threshold: f64,
     ) -> Array<f64, Ix2> {
         let n = v_g.shape()[0];
         let m = c_gd.shape()[0];
@@ -102,7 +102,7 @@ mod rust_fn {
 
         rows.par_iter_mut().enumerate().for_each(|(j, result_row)| {
             let v_g_row = v_g.slice(s![j, ..]);
-            let n_charge = ground_state_0d_isolated(v_g_row, n_charge, c_gd, c_dd, c_dd_inv, tolerance);
+            let n_charge = ground_state_0d_isolated(v_g_row, n_charge, c_gd, c_dd, c_dd_inv, threshold);
             result_row.assign(&n_charge);
         });
 
@@ -110,7 +110,7 @@ mod rust_fn {
     }
 
 
-    pub fn ground_state_0d<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f64, Ix2>, c_dd_inv: ArrayView<'a, f64, Ix2>, tolerance: f64) -> Array<f64, Ix1> {
+    pub fn ground_state_0d<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f64, Ix2>, c_dd_inv: ArrayView<'a, f64, Ix2>, threshold: f64) -> Array<f64, Ix1> {
 
         // compute the continuous part of the ground state
         let mut n_continuous = c_gd.dot(&v_g);
@@ -119,7 +119,7 @@ mod rust_fn {
         n_continuous.mapv_inplace(|x| x.max(0.0));
 
         // determine if rounding is required
-        let requires_floor_ceil = n_continuous.iter().any(|x| (x.fract() - 0.5).abs() < tolerance);
+        let requires_floor_ceil = n_continuous.iter().any(|x| (x.fract() - 0.5).abs() < threshold);
 
         if !requires_floor_ceil {
             // round every element to the nearest integer
@@ -136,12 +136,12 @@ mod rust_fn {
 
             // floor_ceil_args are the indices that need to be checked whether they need to be rounded up or down not to the nearest integer
             let floor_ceil_args = (0..n_continuous.len())
-                .filter(|i| (n_continuous[*i].fract() - 0.5).abs() < tolerance)
+                .filter(|i| (n_continuous[*i].fract() - 0.5).abs() < threshold)
                 .collect::<Vec<usize>>();
 
             // round args are the indices not in floor_ceil_args, which can just be normally rounded to the nearest integer
             let round_args: Array1<usize> = (0..n_continuous.len())
-                .filter(|i| (n_continuous[i.to_owned()].fract() - 0.5).abs() >= tolerance)
+                .filter(|i| (n_continuous[i.to_owned()].fract() - 0.5).abs() >= threshold)
                 .collect();
 
             for ops in repeat_n(floor_ceil_funcs, floor_ceil_args.len()).multi_cartesian_product()
@@ -171,7 +171,7 @@ mod rust_fn {
     }
 
     pub fn ground_state_0d_isolated<'a>(v_g: ArrayView<f64, Ix1>, n_charge: f64,
-                                        c_gd: ArrayView<'a, f64, Ix2>, c_dd: ArrayView<'a, f64, Ix2>, c_dd_inv: ArrayView<'a, f64, Ix2>, tolerance: f64) -> Array<f64, Ix1> {
+                                        c_gd: ArrayView<'a, f64, Ix2>, c_dd: ArrayView<'a, f64, Ix2>, c_dd_inv: ArrayView<'a, f64, Ix2>, threshold: f64) -> Array<f64, Ix1> {
 
         // compute the continuous part of the ground state
         let mut n_continuous = c_gd.dot(&v_g);
@@ -182,7 +182,7 @@ mod rust_fn {
         n_continuous.mapv_inplace(|x| x.max(0.0).min(n_charge));
 
         // determine if rounding is required
-        let requires_floor_ceil = n_continuous.iter().any(|x| (x.fract() - 0.5).abs() < tolerance);
+        let requires_floor_ceil = n_continuous.iter().any(|x| (x.fract() - 0.5).abs() < threshold);
 
         if !requires_floor_ceil {
             // round every element to the nearest integer
@@ -199,12 +199,12 @@ mod rust_fn {
 
             // floor_ceil_args are the indices that need to be checked whether they need to be rounded up or down not to the nearest integer
             let floor_ceil_args = (0..n_continuous.len())
-                .filter(|i| (n_continuous[*i].fract() - 0.5).abs() < tolerance)
+                .filter(|i| (n_continuous[*i].fract() - 0.5).abs() < threshold)
                 .collect::<Vec<usize>>();
 
             // round args are the indices not in floor_ceil_args, which can just be normally rounded to the nearest integer
             let round_args: Array1<usize> = (0..n_continuous.len())
-                .filter(|i| (n_continuous[i.to_owned()].fract() - 0.5).abs() >= tolerance)
+                .filter(|i| (n_continuous[i.to_owned()].fract() - 0.5).abs() >= threshold)
                 .collect();
 
             for ops in repeat_n(floor_ceil_funcs, floor_ceil_args.len()).multi_cartesian_product()
