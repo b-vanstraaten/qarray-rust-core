@@ -119,7 +119,7 @@ mod rust_fn {
         n_continuous.mapv_inplace(|x| x.max(0.0));
 
         // determine if rounding is required
-        let requires_floor_ceil = n_continuous.iter().any(|x| (x.fract() - 0.5).abs() < threshold);
+        let requires_floor_ceil = n_continuous.iter().any(|x| (x.fract() - 0.5).abs() < threshold / 2.);
 
         if !requires_floor_ceil {
             // round every element to the nearest integer
@@ -182,7 +182,7 @@ mod rust_fn {
         n_continuous.mapv_inplace(|x| x.max(0.0).min(n_charge));
 
         // determine if rounding is required
-        let requires_floor_ceil = n_continuous.iter().any(|x| (x.fract() - 0.5).abs() < threshold);
+        let requires_floor_ceil = n_continuous.iter().any(|x| (x.fract() - 0.5).abs() < threshold / 2.);
 
         if !requires_floor_ceil {
             // round every element to the nearest integer
