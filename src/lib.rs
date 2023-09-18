@@ -18,35 +18,35 @@ fn rusty_capacitance_model_core(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     // longer than Python itself. Therefore, if Python is dropped, so must our Rust Python-dependent variables.
 
     #[pyfn(m)]
-    fn ground_state<'py>(py: Python<'py>,
-                         v_g: PyReadonlyArray2<f64>,
-                         c_gd: PyReadonlyArray2<f64>,
-                         c_dd_inv: PyReadonlyArray2<f64>,
-                         threshold: f64,
+    fn ground_state_open<'py>(py: Python<'py>,
+                              v_g: PyReadonlyArray2<f64>,
+                              c_gd: PyReadonlyArray2<f64>,
+                              c_dd_inv: PyReadonlyArray2<f64>,
+                              threshold: f64,
     ) -> &'py PyArray2<f64> {
         let v_g = v_g.as_array();
         let c_gd = c_gd.as_array();
         let c_dd_inv = c_dd_inv.as_array();
 
-        let results_array = rust_fn::ground_state_1d(v_g, c_gd, c_dd_inv, threshold);
+        let results_array = rust_fn::ground_state_open_1d(v_g, c_gd, c_dd_inv, threshold);
         results_array.into_pyarray(py)
     }
 
     #[pyfn(m)]
-    fn ground_state_isolated<'py>(py: Python<'py>,
-                                  v_g: PyReadonlyArray2<f64>,
-                                  n_charge: f64,
-                                  c_gd: PyReadonlyArray2<f64>,
-                                  cdd: PyReadonlyArray2<f64>,
-                                  c_dd_inv: PyReadonlyArray2<f64>,
-                                  threshold: f64,
+    fn ground_state_closed<'py>(py: Python<'py>,
+                                v_g: PyReadonlyArray2<f64>,
+                                n_charge: f64,
+                                c_gd: PyReadonlyArray2<f64>,
+                                cdd: PyReadonlyArray2<f64>,
+                                c_dd_inv: PyReadonlyArray2<f64>,
+                                threshold: f64,
     ) -> &'py PyArray2<f64> {
         let v_g = v_g.as_array();
         let c_gd = c_gd.as_array();
         let c_dd = cdd.as_array();
         let c_dd_inv = c_dd_inv.as_array();
 
-        let results_array = rust_fn::ground_state_1d_isolated(v_g, n_charge, c_gd, c_dd, c_dd_inv, threshold);
+        let results_array = rust_fn::ground_state_closed_1d(v_g, n_charge, c_gd, c_dd, c_dd_inv, threshold);
         results_array.into_pyarray(py)
     }
 
@@ -65,7 +65,7 @@ mod rust_fn {
     use ndarray::{Array, Array1, Array2, ArrayView, Axis, Ix1, Ix2, s};
     use rayon::prelude::*;
 
-    pub fn ground_state_1d<'a>(
+    pub fn ground_state_open_1d<'a>(
         v_g: ArrayView<'a, f64, Ix2>,
         c_gd: ArrayView<'a, f64, Ix2>,
         c_dd_inv: ArrayView<'a, f64, Ix2>,
@@ -79,14 +79,14 @@ mod rust_fn {
 
         rows.par_iter_mut().enumerate().for_each(|(j, result_row)| {
             let v_g_row = v_g.slice(s![j, ..]);
-            let n_charge = ground_state_0d(v_g_row, c_gd, c_dd_inv, threshold);
+            let n_charge = ground_state_open_0d(v_g_row, c_gd, c_dd_inv, threshold);
             result_row.assign(&n_charge);
         });
 
         results_array
     }
 
-    pub fn ground_state_1d_isolated<'a>(
+    pub fn ground_state_closed_1d<'a>(
         v_g: ArrayView<'a, f64, Ix2>,
         n_charge: f64,
         c_gd: ArrayView<'a, f64, Ix2>,
@@ -102,7 +102,7 @@ mod rust_fn {
 
         rows.par_iter_mut().enumerate().for_each(|(j, result_row)| {
             let v_g_row = v_g.slice(s![j, ..]);
-            let n_charge = ground_state_0d_isolated(v_g_row, n_charge, c_gd, c_dd, c_dd_inv, threshold);
+            let n_charge = ground_state_closed_0d(v_g_row, n_charge, c_gd, c_dd, c_dd_inv, threshold);
             result_row.assign(&n_charge);
         });
 
@@ -110,7 +110,7 @@ mod rust_fn {
     }
 
 
-    pub fn ground_state_0d<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f64, Ix2>, c_dd_inv: ArrayView<'a, f64, Ix2>, threshold: f64) -> Array<f64, Ix1> {
+    pub fn ground_state_open_0d<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f64, Ix2>, c_dd_inv: ArrayView<'a, f64, Ix2>, threshold: f64) -> Array<f64, Ix1> {
 
         // compute the continuous part of the ground state
         let mut n_continuous = c_gd.dot(&v_g);
@@ -170,8 +170,8 @@ mod rust_fn {
         }
     }
 
-    pub fn ground_state_0d_isolated<'a>(v_g: ArrayView<f64, Ix1>, n_charge: f64,
-                                        c_gd: ArrayView<'a, f64, Ix2>, c_dd: ArrayView<'a, f64, Ix2>, c_dd_inv: ArrayView<'a, f64, Ix2>, threshold: f64) -> Array<f64, Ix1> {
+    pub fn ground_state_closed_0d<'a>(v_g: ArrayView<f64, Ix1>, n_charge: f64,
+                                      c_gd: ArrayView<'a, f64, Ix2>, c_dd: ArrayView<'a, f64, Ix2>, c_dd_inv: ArrayView<'a, f64, Ix2>, threshold: f64) -> Array<f64, Ix1> {
 
         // compute the continuous part of the ground state
         let mut n_continuous = c_gd.dot(&v_g);
