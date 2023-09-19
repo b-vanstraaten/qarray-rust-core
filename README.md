@@ -61,7 +61,9 @@ The python code to call these functions is as follows:
    n_open = ground_state_open(vg, cgd, cdd_inv, threshold)
    n_closed = ground_state_closed(vg, n_charge, cgd, cdd, cdd_inv, threshold)
    ```
-However, it is not intended the user ever call these functions directly. There is a pure Python wrapper package that provides a more user-friendly interface to this core functionality. 
+**It is not intended the user ever call these functions directly.**
+
+There is a pure Python wrapper that provides a more user-friendly interface to this core functionality. 
 See [Quantum Dot Constant Capacitance Simulator](https://github.com/b-vanstraaten/rusty_capacitance_model). This package provides: 
 
 - **A user-friendly interface** to the core functionality.
