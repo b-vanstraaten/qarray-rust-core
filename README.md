@@ -3,6 +3,9 @@
 ![GitHub Workflow Status](https://github.com/b-vanstraaten/rusty_capacitance_model_core/workflows/CI/badge.svg)
 ![PyPI](https://img.shields.io/pypi/v/rusty-capacitance-model-core)
 
+![Rust logo](https://www.rust-lang.org/static/images/rust-logo-blk.svg)
+![Python logo](https://s3.dualstack.us-east-2.amazonaws.com/pythondotorg-assets/media/files/python-logo-only.svg)
+
 **Quantum Dot Constant Capacitance Simulator** is a high-performance Python package that leverages the power of Rust and Rayon to provide a fully parallelised and optimised simulation environment for quantum dots with constant capacitance.
 
 **This package provides core functionality; it is not intended that the user will interact with it directly.**
