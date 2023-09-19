@@ -6,7 +6,7 @@ license-file = "LICENSE.md"
 
 [project]
 name = "rusty_capacitance_model_core"
-requires-python = ">=3.7"
+requires-python = ">=3.10"
 authors = [
     {name = 'Barnaby van Straaten', email = 'barnaby.vanstraaten@kellogg.ox.ac.uk'}
 ]
