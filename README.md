@@ -64,10 +64,8 @@ The python code to call these functions is as follows:
 However, it is not intended the user ever call these functions directly. There is a pure Python wrapper package that provides a more user-friendly interface to this core functionality. 
 See [Quantum Dot Constant Capacitance Simulator](https://github.com/b-vanstraaten/rusty_capacitance_model). This package provides: 
 
-- A more user-friendly interface to the core functionality.
-- Plotting, charge sensing, virtual gate and gate voltage sweeping (1d and 2d) functionality.
-- A more extensive set of examples.
-- A more extensive set of documentation.
-- Advanced type checking using pydantic.
-- Automated testing including for the functionality in this package.
-- Automated benchmarking including for the functionality in this package.
+- A more *user-friendly interface* to the core functionality.
+- *Plotting, charge sensing, virtual gate* and gate voltage sweeping (1d and 2d) functionality.
+- Advanced *type checking* using pydantic.
+- *Automated testing* including for the functionality in this package.
+- A more extensive set of *examples*.
