@@ -11,7 +11,7 @@ crate-type = ["cdylib"]
 ndarray = "0.15.6"
 numpy = "0.19.0"
 itertools = "0.11.0"
-rayon = "1.7.0"
+rayon = "1.8.0"
 osqp = "0.6.2"
 
 [dependencies.pyo3]
