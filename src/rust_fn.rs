@@ -1,4 +1,4 @@
-use std::usize;
+use std::isize;
 
 use itertools;
 use itertools::{Itertools, repeat_n};
@@ -154,9 +154,9 @@ pub fn ground_state_open_0d<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f6
         let mut delta = Array1::<f64>::zeros(n_continuous.len());
 
         // floor_ceil_args are the indices that need to be checked whether they need to be rounded up or down not to the nearest integer
-        let floor_ceil_args = (0..n_continuous.len())
+        let floor_ceil_args: Array1<usize> = (0..n_continuous.len())
             .filter(|i| (n_continuous[*i].fract() - 0.5).abs() < threshold / 2.)
-            .collect::<Vec<usize>>();
+            .collect();
 
         // round args are the indices not in floor_ceil_args, which can just be normally rounded to the nearest integer
         let round_args: Array1<usize> = (0..n_continuous.len())
@@ -192,7 +192,7 @@ pub fn ground_state_open_0d<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f6
 pub fn ground_state_closed_0d<'a>(v_g: ArrayView<f64, Ix1>, n_charge: f64,
                                   c_gd: ArrayView<'a, f64, Ix2>, c_dd_inv: ArrayView<'a, f64, Ix2>) -> Array<f64, Ix1> {
 
-    let n_dot = c_dd_inv.shape()[0] as usize;
+    let n_dot = c_dd_inv.shape()[0] as isize;
     let mut problem = init_osqp_problem_closed(v_g, c_gd, c_dd_inv, n_charge);
     let result = problem.solve();
 
@@ -206,9 +206,9 @@ pub fn ground_state_closed_0d<'a>(v_g: ArrayView<f64, Ix1>, n_charge: f64,
     n_continuous.mapv_inplace(|x| x.max(0.0).min(n_charge));
     let floor_list = n_continuous
         .mapv(|x| f64::floor(x))
-        .mapv(|x| x as usize);
+        .mapv(|x| x as isize);
 
-    let n_list = closed_charge_configurations_brute_force(n_charge as usize, n_dot, floor_list.view());
+    let n_list = closed_charge_configurations_brute_force(n_charge as isize, n_dot, floor_list.view());
 
     // type conversion from i64 to f64
     let n_list = n_list.mapv(|x| x as f64);
