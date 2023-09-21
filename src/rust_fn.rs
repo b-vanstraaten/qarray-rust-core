@@ -38,7 +38,7 @@ fn init_osqp_problem_open<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f64,
 
 
 fn init_osqp_problem_closed<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f64, Ix2>,
-                              c_dd_inv: ArrayView<'a, f64, Ix2>, n_charge: f64) -> Problem {
+                              c_dd_inv: ArrayView<'a, f64, Ix2>, n_charge: u64) -> Problem {
 
     let dim = c_dd_inv.shape()[0];
     let P = CscMatrix::from(c_dd_inv.rows()).into_upper_tri();
@@ -48,14 +48,14 @@ fn init_osqp_problem_closed<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f6
 
     let l_array = ndarray::concatenate(
         Axis(0), &[
-            Array1::<f64>::from_elem(1, n_charge).view(),
+            Array1::<f64>::from_elem(1, n_charge as f64).view(),
             Array1::<f64>::zeros(dim).view()]
     ).unwrap();
     let l = l_array.as_slice().unwrap();
 
     let u_array = ndarray::concatenate(
         Axis(0), &[
-            Array1::<f64>::from_elem(1, n_charge).view(),
+            Array1::<f64>::from_elem(1, n_charge as f64).view(),
             Array1::<f64>::from_elem(dim, 100.).view()]
     ).unwrap();
     let u = u_array.as_slice().unwrap();
@@ -105,7 +105,7 @@ pub fn ground_state_open_1d<'a>(
 
 pub fn ground_state_closed_1d<'a>(
     v_g: ArrayView<'a, f64, Ix2>,
-    n_charge: f64,
+    n_charge: u64,
     c_gd: ArrayView<'a, f64, Ix2>,
     c_dd_inv: ArrayView<'a, f64, Ix2>,
 ) -> Array<f64, Ix2> {
@@ -189,10 +189,10 @@ pub fn ground_state_open_0d<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f6
     }
 }
 
-pub fn ground_state_closed_0d<'a>(v_g: ArrayView<f64, Ix1>, n_charge: f64,
+pub fn ground_state_closed_0d<'a>(v_g: ArrayView<f64, Ix1>, n_charge: u64,
                                   c_gd: ArrayView<'a, f64, Ix2>, c_dd_inv: ArrayView<'a, f64, Ix2>) -> Array<f64, Ix1> {
 
-    let n_dot = c_dd_inv.shape()[0] as isize;
+    let n_dot = c_dd_inv.shape()[0];
     let mut problem = init_osqp_problem_closed(v_g, c_gd, c_dd_inv, n_charge);
     let result = problem.solve();
 
@@ -203,12 +203,12 @@ pub fn ground_state_closed_0d<'a>(v_g: ArrayView<f64, Ix1>, n_charge: f64,
         .to_owned());
 
     // clip the continuous part to be positive, as we have turned off polishing in the solver
-    n_continuous.mapv_inplace(|x| x.max(0.0).min(n_charge));
+    n_continuous.mapv_inplace(|x| x.max(0.0).min(n_charge as f64));
     let floor_list = n_continuous
         .mapv(|x| f64::floor(x))
-        .mapv(|x| x as isize);
+        .mapv(|x| x as u64);
 
-    let n_list = closed_charge_configurations_brute_force(n_charge as isize, n_dot, floor_list.view());
+    let n_list = closed_charge_configurations_brute_force(n_charge, n_dot as u64, floor_list.view());
 
     // type conversion from i64 to f64
     let n_list = n_list.mapv(|x| x as f64);

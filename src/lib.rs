@@ -9,10 +9,10 @@ fn rusty_capacitance_model_core(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 
     #[pyfn(m)]
     fn closed_charge_configurations_brute_force<'py>(py: Python<'py>,
-                              n_charge: isize,
-                              n_dot: isize,
-                              floor_values: PyReadonlyArray1<isize>,
-    ) -> &'py PyArray2<isize> {
+                              n_charge: u64,
+                              n_dot: u64,
+                              floor_values: PyReadonlyArray1<u64>,
+    ) -> &'py PyArray2<u64> {
 
         let results_array = charge_configurations::closed_charge_configurations_brute_force(n_charge, n_dot, floor_values.as_array());
         results_array.into_pyarray(py)
@@ -36,7 +36,7 @@ fn rusty_capacitance_model_core(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     #[pyfn(m)]
     fn ground_state_closed<'py>(py: Python<'py>,
                                 v_g: PyReadonlyArray2<f64>,
-                                n_charge: f64,
+                                n_charge: u64,
                                 c_gd: PyReadonlyArray2<f64>,
                                 c_dd_inv: PyReadonlyArray2<f64>,
     ) -> &'py PyArray2<f64> {

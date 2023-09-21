@@ -7,29 +7,29 @@ use rayon::prelude::*;
 
 
 pub fn closed_charge_configurations_brute_force(
-    n_charge: isize,
-    n_dot: isize,
-    floor_values: ArrayView<isize, Ix1>,
-) -> Array2<isize> {
-    let floor_sum: isize = floor_values.sum();
+    n_charge: u64,
+    n_dot: u64,
+    floor_values: ArrayView<u64, Ix1>,
+) -> Array2<u64> {
+    let floor_sum: u64 = floor_values.sum();
 
     if floor_sum > n_charge {
         return Array2::default((0, n_dot as usize)); // Return an empty array
     }
 
-    if floor_values.iter().map(|&x| x + 1).sum::<isize>() < n_charge {
+    if floor_values.iter().map(|&x| x + 1).sum::<u64>() < n_charge {
         return Array2::default((0, n_dot as usize)); // Return an empty array
     }
 
-    let num_combinations = 2isize.pow(floor_values.len() as u32);
+    let num_combinations = 2u64.pow(floor_values.len() as u32);
     let result = (0..num_combinations)
         .map(|i| {
             let binary_str = format!("{:01$b}", i, floor_values.len());
-            let binary_values: Vec<isize> = binary_str
+            let binary_values: Vec<u64> = binary_str
                 .chars()
-                .map(|c| c.to_digit(2).unwrap() as isize)
+                .map(|c| c.to_digit(2).unwrap() as u64)
                 .collect();
-            let sum: isize = binary_values.iter().sum();
+            let sum: u64 = binary_values.iter().sum();
             if sum == n_charge - floor_sum { Some(binary_values) } else { None }
         })
         .filter_map(|x| x)
@@ -40,6 +40,6 @@ pub fn closed_charge_configurations_brute_force(
             comb
         })
         .flatten()
-        .collect::<Vec<isize>>();
+        .collect::<Vec<u64>>();
     Array2::from_shape_vec((result.len() / n_dot as usize, n_dot as usize), result).unwrap()
 }
