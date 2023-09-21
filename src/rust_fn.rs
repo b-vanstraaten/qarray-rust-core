@@ -192,7 +192,7 @@ pub fn ground_state_open_0d<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f6
 pub fn ground_state_closed_0d<'a>(v_g: ArrayView<f64, Ix1>, n_charge: f64,
                                   c_gd: ArrayView<'a, f64, Ix2>, c_dd_inv: ArrayView<'a, f64, Ix2>) -> Array<f64, Ix1> {
 
-    let n_dot = c_dd_inv.shape()[0] as i64;
+    let n_dot = c_dd_inv.shape()[0] as usize;
     let mut problem = init_osqp_problem_closed(v_g, c_gd, c_dd_inv, n_charge);
     let result = problem.solve();
 
@@ -206,9 +206,9 @@ pub fn ground_state_closed_0d<'a>(v_g: ArrayView<f64, Ix1>, n_charge: f64,
     n_continuous.mapv_inplace(|x| x.max(0.0).min(n_charge));
     let floor_list = n_continuous
         .mapv(|x| f64::floor(x))
-        .mapv(|x| x as i64);
+        .mapv(|x| x as usize);
 
-    let n_list = closed_charge_configurations_brute_force(n_charge as i64, n_dot, floor_list.view());
+    let n_list = closed_charge_configurations_brute_force(n_charge as usize, n_dot, floor_list.view());
 
     // type conversion from i64 to f64
     let n_list = n_list.mapv(|x| x as f64);
