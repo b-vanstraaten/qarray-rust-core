@@ -25,16 +25,12 @@ pub fn closed_charge_configurations_brute_force(
     let result = (0..num_combinations)
         .map(|i| {
             let binary_str = format!("{:01$b}", i, floor_values.len());
-            let binary_values:Vec<i64> = binary_str
+            let binary_values: Vec<i64> = binary_str
                 .chars()
                 .map(|c| c.to_digit(2).unwrap() as i64)
                 .collect();
             let sum: i64 = binary_values.iter().sum();
-            if sum == n_charge - floor_sum {
-                Some(binary_values)
-            } else {
-                None
-            }
+            if sum == n_charge - floor_sum { Some(binary_values) } else { None }
         })
         .filter_map(|x| x)
         .map(|mut comb| {
@@ -45,8 +41,5 @@ pub fn closed_charge_configurations_brute_force(
         })
         .flatten()
         .collect::<Vec<i64>>();
-
-
-    let result_array = Array2::from_shape_vec((result.len() / n_dot as usize, n_dot as usize), result);
-    result_array.unwrap()
+    Array2::from_shape_vec((result.len() / n_dot as usize, n_dot as usize), result).unwrap()
 }
