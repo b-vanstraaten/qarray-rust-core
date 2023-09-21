@@ -19,5 +19,5 @@ version = "0.19.2"
 features = ["extension-module"]
 
 [profile.release]
-#codegen-units = 1
-#lto = true
+codegen-units = 1
+lto = true
