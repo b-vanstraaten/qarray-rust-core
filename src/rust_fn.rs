@@ -32,7 +32,7 @@ fn init_osqp_problem_open<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f64,
     let settings = Settings::default()
         .alpha(1.0)
         .verbose(false)
-        .polish(false);
+        .polish(true);
     Problem::new(P, q, A, l, u, &settings).expect("failed to setup problem")
 }
 
@@ -208,7 +208,7 @@ pub fn ground_state_closed_0d<'a>(v_g: ArrayView<f64, Ix1>, n_charge: u64,
         .mapv(|x| f64::floor(x))
         .mapv(|x| x as u64);
 
-    let n_list = closed_charge_configurations_brute_force(n_charge, n_dot as u64, floor_list.view());
+    let n_list = closed_charge_configurations_brute_force(n_charge, n_dot as u64, floor_list);
 
     // type conversion from i64 to f64
     let n_list = n_list.mapv(|x| x as f64);
