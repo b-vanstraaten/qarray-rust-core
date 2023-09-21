@@ -12,7 +12,6 @@ fn init_osqp_problem_open<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f64,
                               c_dd_inv: ArrayView<'a, f64, Ix2>) -> Problem {
 
 
-
     let dim = c_dd_inv.shape()[0];
     let P = CscMatrix::from(c_dd_inv.rows()).into_upper_tri();
 
