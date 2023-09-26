@@ -33,11 +33,10 @@ pub fn ground_state_closed_1d<'a>(
 pub fn ground_state_closed_0d<'a>(v_g: ArrayView<f64, Ix1>, n_charge: u64,
                                   c_gd: ArrayView<'a, f64, Ix2>, c_dd: ArrayView<'a, f64, Ix2>, c_dd_inv: ArrayView<'a, f64, Ix2>) -> Array<f64, Ix1> {
     let analytical_solution = analytical_solution(c_gd, c_dd, v_g, n_charge);
-
     if analytical_solution.iter().all(|x| x >= &0.0 && x <= &(n_charge as f64)) {
         // the analytical solution is a valid charge configuration therefore we don't need to solve
         // the constrained optimization problem
-        return compute_argmin_closed(analytical_solution, c_dd_inv, n_charge);
+        return compute_argmin_closed(analytical_solution, c_dd_inv, c_gd, v_g, n_charge);
     } else {
         // the analytical solution is not a valid charge configuration
         // therefore we need to solve the constrained optimization problem
@@ -50,7 +49,7 @@ pub fn ground_state_closed_0d<'a>(v_g: ArrayView<f64, Ix1>, n_charge: u64,
             .expect("failed to solve problem")
             .to_owned());
 
-        return compute_argmin_closed(n_continuous, c_dd_inv, n_charge);
+        return compute_argmin_closed(n_continuous, c_dd_inv, c_gd, v_g, n_charge);
     }
 }
 
@@ -102,7 +101,7 @@ fn init_osqp_problem_closed<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f6
 }
 
 
-fn compute_argmin_closed(n_continuous: Array1<f64>, c_dd_inv: ArrayView<f64, Ix2>, n_charge: u64) -> Array1<f64> {
+fn compute_argmin_closed(n_continuous: Array1<f64>, c_dd_inv: ArrayView<f64, Ix2>, c_gd: ArrayView<f64, Ix2>, vg: ArrayView<f64, Ix1>  ,n_charge: u64) -> Array1<f64> {
     let n_dot = c_dd_inv.shape()[0] as u64;
 
     let floor_list = n_continuous
@@ -116,7 +115,7 @@ fn compute_argmin_closed(n_continuous: Array1<f64>, c_dd_inv: ArrayView<f64, Ix2
 
     let n_min = n_list
         .outer_iter()
-        .map(|x| x.to_owned() - &n_continuous)
+        .map(|x| x.to_owned() - &c_gd.dot(&vg))
         .map(|x| x.dot(&c_dd_inv.dot(&x)))
         .enumerate()
         .min_by(|(_, x), (_, y)| x.partial_cmp(y).unwrap())

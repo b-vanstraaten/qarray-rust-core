@@ -6,17 +6,7 @@ use ndarray::{Array, Array1, Array2, ArrayView, Axis, Ix1, Ix2, s};
 use rayon::prelude::*;
 use osqp::{CscMatrix, Problem, Settings};
 
-fn floor_remainder(x: f64) -> f64 {
-    f64::floor(x) - x
-}
 
-fn ceil_remainder(x: f64) -> f64 {
-    f64::ceil(x) - x
-}
-
-fn round_remainder(x: f64) -> f64 {
-    f64::round(x) - x
-}
 
 pub fn ground_state_open_1d<'a>(
     v_g: ArrayView<'a, f64, Ix2>,
@@ -44,7 +34,7 @@ fn ground_state_open_0d<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f64, I
     let analytical_solution = analytical_solution(c_gd, v_g);
 
     if analytical_solution.iter().all(|x| x >= &0.0) {
-        return compute_argmin_open(analytical_solution, c_dd_inv, threshold);
+        return compute_argmin_open(analytical_solution, c_dd_inv, c_gd, v_g, threshold);
     } else {
 
         let mut problem = init_osqp_problem_open(v_g, c_gd, c_dd_inv);
@@ -58,7 +48,7 @@ fn ground_state_open_0d<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f64, I
 
         // clip the continuous part to be positive, as we have turned off polishing in the solver
         n_continuous.mapv_inplace(|x| x.max(0.0));
-        return compute_argmin_open(n_continuous, c_dd_inv, threshold)
+        return compute_argmin_open(n_continuous, c_dd_inv, c_gd, v_g, threshold)
 
     }
 
@@ -98,14 +88,14 @@ fn init_osqp_problem_open<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f64,
     return Problem::new(P, q, A, l, u, &settings).expect("failed to setup problem")
 }
 
-fn compute_argmin_open(n_continuous: Array1<f64>, c_dd_inv: ArrayView<f64, Ix2>, threshold: f64) -> Array1<f64> {
+fn compute_argmin_open(n_continuous: Array1<f64>, c_dd_inv: ArrayView<f64, Ix2>, c_gd: ArrayView<f64, Ix2>, v_g: ArrayView<f64, Ix1>, threshold: f64) -> Array1<f64> {
     let requires_floor_ceil = n_continuous.iter().any(|x| (x.fract() - 0.5).abs() < threshold / 2.);
     if !requires_floor_ceil {
         // round every element to the nearest integer
         return n_continuous.mapv(|x| f64::round(x));
     } else {
 
-        let floor_ceil_funcs = [floor_remainder, ceil_remainder];
+        let floor_ceil_funcs = [f64::floor, f64::ceil];
 
         // floor_ceil_args are the indices that need to be checked whether they need to be rounded up or down not to the nearest integer
         let floor_ceil_args: Array1<usize> = (0..n_continuous.len())
@@ -117,7 +107,9 @@ fn compute_argmin_open(n_continuous: Array1<f64>, c_dd_inv: ArrayView<f64, Ix2>,
             .filter(|i| (n_continuous[i.to_owned()].fract() - 0.5).abs() >= threshold / 2.)
             .collect();
 
-        let (min_u, min_delta) = repeat_n(&floor_ceil_funcs, floor_ceil_args.len())
+        let vg_dash = c_gd.dot(&v_g);
+
+        let (min_u, min_n) = repeat_n(&floor_ceil_funcs, floor_ceil_args.len())
             .multi_cartesian_product()
             .map(|ops| {
 
@@ -126,21 +118,22 @@ fn compute_argmin_open(n_continuous: Array1<f64>, c_dd_inv: ArrayView<f64, Ix2>,
                 // Calculate delta based on ops and round_args
                 for (i, op) in floor_ceil_args.iter().zip(&ops) {
                     let j = i.to_owned();
-                    delta[j] = op(n_continuous[j]);
+                    delta[j] = op(n_continuous[j]) - vg_dash[j];
                 }
 
                 // Calculate delta based and round_args
                 for i in &round_args {
                     let j = i.to_owned();
-                    delta[j] = round_remainder(n_continuous[j])
+                    delta[j] = f64::round(n_continuous[j]) - vg_dash[j];
                 }
 
                 // Calculate u
                 let u = delta.dot(&c_dd_inv.dot(&delta));
                 (u, delta.to_owned())
             }).min_by(|(u1, _), (u2, _)| u1.partial_cmp(u2).unwrap())
+            .map(|(u, delta)| (u, delta + vg_dash))
             .unwrap();
 
-        return n_continuous + min_delta
+        return min_n
     }
 }
