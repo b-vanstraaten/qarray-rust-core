@@ -14,6 +14,7 @@ pub fn ground_state_closed_1d<'a>(
     c_gd: ArrayView<'a, f64, Ix2>,
     c_dd: ArrayView<'a, f64, Ix2>,
     c_dd_inv: ArrayView<'a, f64, Ix2>,
+    threshold: f64,
 ) -> Array<f64, Ix2> {
     let n = v_g.shape()[0];
     let m = c_gd.shape()[0];
@@ -23,19 +24,19 @@ pub fn ground_state_closed_1d<'a>(
 
     rows.par_iter_mut().enumerate().for_each(|(j, result_row)| {
         let v_g_row = v_g.slice(s![j, ..]);
-        let n_charge = ground_state_closed_0d(v_g_row, n_charge, c_gd, c_dd, c_dd_inv);
+        let n_charge = ground_state_closed_0d(v_g_row, n_charge, c_gd, c_dd, c_dd_inv, threshold);
         result_row.assign(&n_charge);
     });
     results_array
 }
 
 pub fn ground_state_closed_0d<'a>(v_g: ArrayView<f64, Ix1>, n_charge: u64,
-                                  c_gd: ArrayView<'a, f64, Ix2>, c_dd: ArrayView<'a, f64, Ix2>, c_dd_inv: ArrayView<'a, f64, Ix2>) -> Array<f64, Ix1> {
+                                  c_gd: ArrayView<'a, f64, Ix2>, c_dd: ArrayView<'a, f64, Ix2>, c_dd_inv: ArrayView<'a, f64, Ix2>, threshold: f64) -> Array<f64, Ix1> {
     let analytical_solution = analytical_solution(c_gd, c_dd, v_g, n_charge);
     if analytical_solution.iter().all(|x| x >= &0.0 && x <= &(n_charge as f64)) {
         // the analytical solution is a valid charge configuration therefore we don't need to solve
         // the constrained optimization problem
-        return compute_argmin_closed(analytical_solution, c_dd_inv, c_gd, v_g, n_charge);
+        return compute_argmin_closed(analytical_solution, c_dd_inv, c_gd, v_g, n_charge, threshold);
     } else {
         // the analytical solution is not a valid charge configuration
         // therefore we need to solve the constrained optimization problem
@@ -48,7 +49,7 @@ pub fn ground_state_closed_0d<'a>(v_g: ArrayView<f64, Ix1>, n_charge: u64,
             .expect("failed to solve problem")
             .to_owned());
 
-        return compute_argmin_closed(n_continuous, c_dd_inv, c_gd, v_g, n_charge);
+        return compute_argmin_closed(n_continuous, c_dd_inv, c_gd, v_g, n_charge, threshold);
     }
 }
 
@@ -99,14 +100,8 @@ fn init_osqp_problem_closed<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f6
 }
 
 
-fn compute_argmin_closed(n_continuous: Array1<f64>, c_dd_inv: ArrayView<f64, Ix2>, c_gd: ArrayView<f64, Ix2>, vg: ArrayView<f64, Ix1>  ,n_charge: u64) -> Array1<f64> {
-    let n_dot = c_dd_inv.shape()[0] as u64;
-
-    let floor_list = n_continuous
-        .mapv(|x| f64::floor(x))
-        .mapv(|x| x as u64);
-
-    let n_list = closed_charge_configurations(n_charge, n_dot as u64, floor_list);
+fn compute_argmin_closed(n_continuous: Array1<f64>, c_dd_inv: ArrayView<f64, Ix2>, c_gd: ArrayView<f64, Ix2>, vg: ArrayView<f64, Ix1>,n_charge: u64, threshold: f64) -> Array1<f64> {
+    let n_list = closed_charge_configurations(n_continuous, n_charge, threshold);
 
     // type conversion from i64 to f64
     let n_list = n_list.mapv(|x| x as f64);

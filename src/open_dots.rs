@@ -5,7 +5,7 @@ use itertools::{Itertools, repeat_n};
 use ndarray::{Array, Array1, Array2, ArrayView, Axis, Ix1, Ix2, s};
 use rayon::prelude::*;
 use osqp::{CscMatrix, Problem, Settings};
-
+use crate::charge_configurations::open_charge_configurations;
 
 
 pub fn ground_state_open_1d<'a>(
@@ -89,50 +89,19 @@ fn init_osqp_problem_open<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f64,
 }
 
 fn compute_argmin_open(n_continuous: Array1<f64>, c_dd_inv: ArrayView<f64, Ix2>, c_gd: ArrayView<f64, Ix2>, v_g: ArrayView<f64, Ix1>, threshold: f64) -> Array1<f64> {
-    let requires_floor_ceil = n_continuous.iter().any(|x| (x.fract() - 0.5).abs() < threshold / 2.);
-    if !requires_floor_ceil {
-        // round every element to the nearest integer
-        return n_continuous.mapv(|x| f64::round(x));
-    } else {
 
-        let floor_ceil_funcs = [f64::floor, f64::ceil];
+    let vg_dash = c_gd.dot(&v_g);
 
-        // floor_ceil_args are the indices that need to be checked whether they need to be rounded up or down not to the nearest integer
-        let floor_ceil_args: Array1<usize> = (0..n_continuous.len())
-            .filter(|i| (n_continuous[*i].fract() - 0.5).abs() < threshold / 2.)
-            .collect();
+    let n_list = open_charge_configurations(n_continuous, threshold);
 
-        // round args are the indices not in floor_ceil_args, which can just be normally rounded to the nearest integer
-        let round_args: Array1<usize> = (0..n_continuous.len())
-            .filter(|i| (n_continuous[i.to_owned()].fract() - 0.5).abs() >= threshold / 2.)
-            .collect();
-
-        let vg_dash = c_gd.dot(&v_g);
-
-        let (min_u, min_n) = repeat_n(&floor_ceil_funcs, floor_ceil_args.len())
-            .multi_cartesian_product()
-            .map(|ops| {
-
-                let mut delta = Array1::<f64>::zeros(n_continuous.len());
-
-                // Calculate delta based on ops and round_args
-                for (i, op) in floor_ceil_args.iter().zip(&ops) {
-                    let j = i.to_owned();
-                    delta[j] = op(n_continuous[j]) - vg_dash[j];
-                }
-
-                // Calculate delta based and round_args
-                for i in &round_args {
-                    let j = i.to_owned();
-                    delta[j] = f64::round(n_continuous[j]) - vg_dash[j];
-                }
-
-                // Calculate u
-                let u = delta.dot(&c_dd_inv.dot(&delta));
-                (u, delta.to_owned())
-            }).min_by(|(u1, _), (u2, _)| u1.partial_cmp(u2).unwrap())
-            .map(|(u, delta)| (u, delta + vg_dash))
-            .unwrap();
-        return min_n
-    }
+    let n_min = n_list
+        .outer_iter()
+        .map(|x| x.to_owned() - &vg_dash)
+        .map(|x| x.dot(&c_dd_inv.dot(&x)))
+        .enumerate()
+        .min_by(|(_, x), (_, y)| x.partial_cmp(y).unwrap())
+        .map(|(idx, _)| n_list.index_axis(Axis(0), idx))
+        .unwrap()
+        .to_owned();
+    return n_min
 }

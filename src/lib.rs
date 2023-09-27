@@ -10,13 +10,12 @@ use pyo3::prelude::{pymodule, PyModule, PyResult, Python};
 fn rusty_capacitance_model_core(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 
     #[pyfn(m)]
-    fn closed_charge_configurations_brute_force<'py>(py: Python<'py>,
-                              n_charge: u64,
-                              n_dot: u64,
-                              floor_values: PyReadonlyArray1<u64>,
-    ) -> &'py PyArray2<u64> {
-
-        let results_array = charge_configurations::closed_charge_configurations(n_charge, n_dot, floor_values.as_array().to_owned());
+    fn closed_charge_configurations<'py>(py: Python<'py>,
+                                         n_continuous: PyReadonlyArray1<f64>,
+                                         n_charge: u64,
+    ) -> &'py PyArray2<f64> {
+        let n_continuous = n_continuous.as_array();
+        let results_array = charge_configurations::closed_charge_configurations(n_continuous.to_owned(), n_charge, 1.);
         results_array.into_pyarray(py)
     }
 
@@ -42,13 +41,14 @@ fn rusty_capacitance_model_core(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
                                 c_gd: PyReadonlyArray2<f64>,
                                 c_dd: PyReadonlyArray2<f64>,
                                 c_dd_inv: PyReadonlyArray2<f64>,
+                                threshold: f64,
     ) -> &'py PyArray2<f64> {
         let v_g = v_g.as_array();
         let c_gd = c_gd.as_array();
         let c_dd = c_dd.as_array();
         let c_dd_inv = c_dd_inv.as_array();
 
-        let results_array = closed_dots::ground_state_closed_1d(v_g, n_charge, c_gd, c_dd, c_dd_inv);
+        let results_array = closed_dots::ground_state_closed_1d(v_g, n_charge, c_gd, c_dd, c_dd_inv, threshold);
         results_array.into_pyarray(py)
     }
     Ok(())

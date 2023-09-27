@@ -1,54 +1,119 @@
-use ndarray::{Array1, Array2};
-
-use itertools;
-
+use ndarray::{Array, Array1, Array2, s, Axis, Ix1, Ix2};
 use cached::proc_macro::cached;
 
-#[cached]
+fn floor_ceil_round_indexing() {
+
+}
+
+
+pub fn open_charge_configurations(n_continuous: Array1<f64>, threshold: f64) -> Array<f64, Ix2> {
+
+    let (floor_ceil_args, round_args): (Vec<usize>, Vec<usize>) = (0..n_continuous.len())
+        .partition(|&i| (n_continuous[i].fract() - 0.5).abs() < threshold / 2.0);
+
+    if floor_ceil_args.is_empty() {
+        // All the continuous values are integers, so we can just return the floor values
+        return n_continuous.mapv(|x| x.round()).insert_axis(Axis(0));
+    }
+
+    let mut charge_configurations = Array2::zeros((1 << floor_ceil_args.len(), n_continuous.len()));
+    let floor_values: Array1<u64> = floor_ceil_args
+        .iter()
+        .map(|&i| n_continuous[i].floor() as u64)
+        .collect();
+
+    let rounded_values: Array1<u64> = round_args
+        .iter()
+        .map(|&i| n_continuous[i].round() as u64)
+        .collect();
+
+    let floor_charge_configurations = _open_charge_configurations(floor_values);
+
+    for (i, &j) in floor_ceil_args.iter().enumerate() {
+        // Ensure that the shape of floor_charge_configurations and rounded_values is compatible for broadcasting.
+        // The dimensions should either match or one of them should be 1.
+        // For example, if floor_charge_configurations.shape() is (N, M) and rounded_values.len() is M, it should work.
+        charge_configurations.slice_mut(s![.., j]).assign(&floor_charge_configurations.slice(s![.., i]));
+    }
+
+    for (i, &j) in round_args.iter().enumerate() {
+        charge_configurations.slice_mut(s![.., j]).fill(rounded_values[i]);
+    }
+    charge_configurations.mapv(|x| x as f64)
+}
+
+
 pub fn closed_charge_configurations(
+    n_continuous: Array1<f64>,
     n_charge: u64,
-    n_dot: u64,
+    threshold: f64,
+) -> Array<f64, Ix2> {
+    let n_dot = n_continuous.len();
+    let n_list_open = open_charge_configurations(n_continuous.clone(), threshold);
+
+    let n_list_closed: Vec<f64> = n_list_open
+        .outer_iter()
+        .filter(|&x| x.map(|x| *x as u64).sum() == n_charge)
+        .map(|x| x.to_owned())
+        .flatten()
+        .collect();
+
+    if n_list_closed.is_empty() {
+        return closed_charge_configurations(n_continuous, n_charge, 1.0);
+    }
+
+    let rows = n_list_closed.len() / n_dot as usize;
+    Array2::from_shape_vec((rows, n_dot as usize), n_list_closed).unwrap()
+}
+
+
+#[cached]
+fn _open_charge_configurations(floor_values: Array1<u64>) -> Array2<u64> {
+    let n_dot = floor_values.len() as u64;
+    let num_combinations = 1u64 << n_dot;
+    let mut result = Vec::with_capacity((num_combinations * n_dot) as usize);
+
+    for i in 0..num_combinations {
+        let mut configuration = floor_values.to_vec(); // Start with a clone of floor_values
+        for j in 0..floor_values.len() {
+            let bit = (i >> j) & 1;
+            configuration[j] += bit;
+        }
+        result.extend_from_slice(&configuration);
+    }
+    let rows = result.len() / n_dot as usize;
+    Array2::from_shape_vec((rows, n_dot as usize), result).unwrap()
+}
+
+#[cached]
+fn _closed_charge_configurations(
     floor_values: Array1<u64>,
+    n_charge: u64,
 ) -> Array2<u64> {
+    let n_dot = floor_values.len() as u64;
     let floor_sum: u64 = floor_values.sum();
 
-    if floor_sum > n_charge {
+    if floor_sum > n_charge || floor_sum + n_dot < n_charge {
         return Array2::default((0, n_dot as usize)); // Return an empty array
     }
 
-    if floor_values.iter().map(|&x| x + 1).sum::<u64>() < n_charge {
-        return Array2::default((0, n_dot as usize)); // Return an empty array
+    let num_combinations = 1u64 << floor_values.len();
+    let mut result = Vec::new();
+    // precompute this value to avoid recomputing it in the loop
+    let n_charge_floor_sum_diff = n_charge - floor_sum;
+
+    for i in 0..num_combinations {
+        let mut sum = 0;
+        let mut comb = floor_values.clone(); // Start with a clone of floor_values
+        for j in 0..floor_values.len() {
+            let bit = (i >> j) & 1;
+            sum += bit;
+            comb[j] += bit;
+        }
+        if sum == n_charge_floor_sum_diff {
+            result.extend_from_slice(comb.as_slice().unwrap());
+        }
     }
-
-    let num_combinations = 2u64.pow(floor_values.len() as u32);
-    let result = (0..num_combinations)
-        .map(|i| {
-
-            let mut sum = 0;
-            for j in 0..floor_values.len() {
-                let bit = (i >> j) & 1;
-                sum += bit;
-            }
-            if sum == n_charge - floor_sum {
-                let mut binary_values = Vec::with_capacity(floor_values.len());
-                for j in 0..floor_values.len() {
-                    let bit = (i >> j) & 1;
-                    binary_values.push(bit);
-                }
-                Some(binary_values)
-            } else {
-                None
-            }
-
-        })
-        .filter_map(|x| x)
-        .map(|mut comb| {
-            for (i, val) in floor_values.iter().enumerate() {
-                comb[i] += val;
-            }
-            comb
-        })
-        .flatten()
-        .collect::<Vec<u64>>();
-    Array2::from_shape_vec((result.len() / n_dot as usize, n_dot as usize), result).unwrap()
+    let rows = result.len() / n_dot as usize;
+    Array2::from_shape_vec((rows, n_dot as usize), result).unwrap()
 }
