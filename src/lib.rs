@@ -10,12 +10,22 @@ use pyo3::prelude::{pymodule, PyModule, PyResult, Python};
 fn rusty_capacitance_model_core(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 
     #[pyfn(m)]
-    fn closed_charge_configurations<'py>(py: Python<'py>,
+    fn open_charge_configurations<'py>(py: Python<'py>,
                                          n_continuous: PyReadonlyArray1<f64>,
-                                         n_charge: u64,
+                                       threshold: f64,
     ) -> &'py PyArray2<f64> {
         let n_continuous = n_continuous.as_array();
-        let results_array = charge_configurations::closed_charge_configurations(n_continuous.to_owned(), n_charge, 1.);
+        let results_array = charge_configurations::open_charge_configurations(n_continuous.to_owned(), threshold);
+        results_array.into_pyarray(py)
+    }
+
+    #[pyfn(m)]
+    fn closed_charge_configurations<'py>(py: Python<'py>,
+                                         n_continuous: PyReadonlyArray1<f64>,
+                                         n_charge: u64, threshold: f64,
+    ) -> &'py PyArray2<f64> {
+        let n_continuous = n_continuous.as_array();
+        let results_array = charge_configurations::closed_charge_configurations(n_continuous.to_owned(), n_charge, threshold);
         results_array.into_pyarray(py)
     }
 

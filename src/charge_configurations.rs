@@ -61,6 +61,12 @@ pub fn closed_charge_configurations(
         .partition(|&i| (n_continuous[i].fract() - 0.5).abs() < threshold / 2.0);
 
     if floor_ceil_args.is_empty() {
+
+        let rounded_values = n_continuous.mapv(|x| x.round());
+        if rounded_values.map(|x| x.to_owned() as u64).sum() == n_charge {
+            return rounded_values.insert_axis(Axis(0));
+        }
+
         // All the continuous values are integers, so we can just return the floor values
         let floor_values = n_continuous.mapv(|x| x.floor() as u64);
         return _closed_charge_configurations(floor_values, n_charge).mapv(|x| x as f64);
