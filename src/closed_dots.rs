@@ -26,7 +26,6 @@ pub fn ground_state_closed_1d<'a>(
         let n_charge = ground_state_closed_0d(v_g_row, n_charge, c_gd, c_dd, c_dd_inv);
         result_row.assign(&n_charge);
     });
-
     results_array
 }
 
@@ -92,7 +91,6 @@ fn init_osqp_problem_closed<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f6
         CscMatrix::from(A.rows())
     };
 
-    // % TODO find out what alpha does and if it is important
     let settings = Settings::default()
         .alpha(1.0)
         .verbose(false)

@@ -10,8 +10,6 @@ pub fn closed_charge_configurations_brute_force(
     n_dot: u64,
     floor_values: Array1<u64>,
 ) -> Array2<u64> {
-    // Create a clone of floor_values with a 'static lifetime
-
     let floor_sum: u64 = floor_values.sum();
 
     if floor_sum > n_charge {

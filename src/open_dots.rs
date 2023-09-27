@@ -133,7 +133,6 @@ fn compute_argmin_open(n_continuous: Array1<f64>, c_dd_inv: ArrayView<f64, Ix2>,
             }).min_by(|(u1, _), (u2, _)| u1.partial_cmp(u2).unwrap())
             .map(|(u, delta)| (u, delta + vg_dash))
             .unwrap();
-
         return min_n
     }
 }
