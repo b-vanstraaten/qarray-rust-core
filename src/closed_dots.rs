@@ -56,6 +56,7 @@ fn analytical_solution(c_gd: ArrayView<f64, Ix2>, c_dd: ArrayView<f64, Ix2>, v_g
     return n_continuous + isolation_correction;
 }
 
+#[allow(non_snake_case)]
 fn init_osqp_problem_closed<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f64, Ix2>,
                                 c_dd_inv: ArrayView<'a, f64, Ix2>, n_charge: u64) -> Problem {
     let dim = c_dd_inv.shape()[0];
@@ -97,7 +98,7 @@ fn init_osqp_problem_closed<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f6
 }
 
 
-fn compute_argmin_closed(n_continuous: Array1<f64>, c_dd_inv: ArrayView<f64, Ix2>, c_gd: ArrayView<f64, Ix2>, vg: ArrayView<f64, Ix1>, n_charge: u64, threshold: f64) -> Array1<f64> {
+fn compute_argmin_closed(n_continuous: Array1<f64>, c_dd_inv: ArrayView<f64, Ix2>, c_gd: ArrayView<f64, Ix2>, v_g: ArrayView<f64, Ix1>, n_charge: u64, threshold: f64) -> Array1<f64> {
     let n_list = closed_charge_configurations(n_continuous, n_charge, threshold);
 
     // type conversion from i64 to f64
@@ -105,7 +106,7 @@ fn compute_argmin_closed(n_continuous: Array1<f64>, c_dd_inv: ArrayView<f64, Ix2
 
     let n_min = n_list
         .outer_iter()
-        .map(|x| x.to_owned() - &c_gd.dot(&vg))
+        .map(|x| x.to_owned() - &c_gd.dot(&v_g))
         .map(|x| x.dot(&c_dd_inv.dot(&x)))
         .enumerate()
         .min_by(|(_, x), (_, y)| x.partial_cmp(y).unwrap())

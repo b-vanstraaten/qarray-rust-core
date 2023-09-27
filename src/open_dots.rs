@@ -50,6 +50,7 @@ fn analytical_solution(c_gd: ArrayView<f64, Ix2>, v_g: ArrayView<f64, Ix1>) -> A
     return c_gd.dot(&v_g);
 }
 
+#[allow(non_snake_case)]
 fn init_osqp_problem_open<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f64, Ix2>,
                               c_dd_inv: ArrayView<'a, f64, Ix2>) -> Problem {
     let dim = c_dd_inv.shape()[0];
