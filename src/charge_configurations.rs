@@ -1,11 +1,9 @@
-use ndarray::{Array, Array1, Array2, s, Axis, Ix2};
 use cached::proc_macro::cached;
-
-
+use ndarray::{Array, Array1, Array2, Axis, Ix2, s};
 
 pub fn open_charge_configurations(n_continuous: Array1<f64>, threshold: f64) -> Array<f64, Ix2> {
 
-    if threshold > 1.0 {
+    if threshold >= 1.0 {
         let floor_values = n_continuous.mapv(|x| x.floor() as u64);
         return _open_charge_configurations(floor_values).mapv(|x| x as f64);
     }
@@ -52,7 +50,8 @@ pub fn closed_charge_configurations(
     threshold: f64,
 ) -> Array<f64, Ix2> {
 
-    if threshold > 1.0 {
+    if threshold >= 1.0 {
+        println!("threshold is greater than 1.0, returning floor values");
         let floor_values = n_continuous.mapv(|x| x.floor() as u64);
         return _closed_charge_configurations(floor_values, n_charge).mapv(|x| x as f64);
     }
