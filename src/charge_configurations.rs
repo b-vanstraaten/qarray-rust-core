@@ -5,6 +5,12 @@ use cached::proc_macro::cached;
 
 pub fn open_charge_configurations(n_continuous: Array1<f64>, threshold: f64) -> Array<f64, Ix2> {
 
+    if threshold > 1.0 {
+        let floor_values = n_continuous.mapv(|x| x.floor() as u64);
+        return _open_charge_configurations(floor_values).mapv(|x| x as f64);
+    }
+
+
     let (floor_ceil_args, round_args): (Vec<usize>, Vec<usize>) = (0..n_continuous.len())
         .partition(|&i| (n_continuous[i].fract() - 0.5).abs() < threshold / 2.0);
 
@@ -45,6 +51,11 @@ pub fn closed_charge_configurations(
     n_charge: u64,
     threshold: f64,
 ) -> Array<f64, Ix2> {
+
+    if threshold > 1.0 {
+        let floor_values = n_continuous.mapv(|x| x.floor() as u64);
+        return _closed_charge_configurations(floor_values, n_charge).mapv(|x| x as f64);
+    }
 
     let (floor_ceil_args, round_args): (Vec<usize>, Vec<usize>) = (0..n_continuous.len())
         .partition(|&i| (n_continuous[i].fract() - 0.5).abs() < threshold / 2.0);
