@@ -5,7 +5,7 @@ use itertools::{Itertools, repeat_n};
 use ndarray::{Array, Array1, Array2, ArrayView, Axis, Ix1, Ix2, s};
 use rayon::prelude::*;
 use osqp::{CscMatrix, Problem, Settings};
-use crate::charge_configurations::closed_charge_configurations_brute_force;
+use crate::charge_configurations::closed_charge_configurations;
 
 
 pub fn ground_state_closed_1d<'a>(
@@ -106,7 +106,7 @@ fn compute_argmin_closed(n_continuous: Array1<f64>, c_dd_inv: ArrayView<f64, Ix2
         .mapv(|x| f64::floor(x))
         .mapv(|x| x as u64);
 
-    let n_list = closed_charge_configurations_brute_force(n_charge, n_dot as u64, floor_list);
+    let n_list = closed_charge_configurations(n_charge, n_dot as u64, floor_list);
 
     // type conversion from i64 to f64
     let n_list = n_list.mapv(|x| x as f64);

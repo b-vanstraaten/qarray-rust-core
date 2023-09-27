@@ -5,7 +5,7 @@ use itertools;
 use cached::proc_macro::cached;
 
 #[cached]
-pub fn closed_charge_configurations_brute_force(
+pub fn closed_charge_configurations(
     n_charge: u64,
     n_dot: u64,
     floor_values: Array1<u64>,
@@ -23,13 +23,23 @@ pub fn closed_charge_configurations_brute_force(
     let num_combinations = 2u64.pow(floor_values.len() as u32);
     let result = (0..num_combinations)
         .map(|i| {
-            let binary_str = format!("{:01$b}", i, floor_values.len());
-            let binary_values: Vec<u64> = binary_str
-                .chars()
-                .map(|c| c.to_digit(2).unwrap() as u64)
-                .collect();
-            let sum: u64 = binary_values.iter().sum();
-            if sum == n_charge - floor_sum { Some(binary_values) } else { None }
+
+            let mut sum = 0;
+            for j in 0..floor_values.len() {
+                let bit = (i >> j) & 1;
+                sum += bit;
+            }
+            if sum == n_charge - floor_sum {
+                let mut binary_values = Vec::with_capacity(floor_values.len());
+                for j in 0..floor_values.len() {
+                    let bit = (i >> j) & 1;
+                    binary_values.push(bit);
+                }
+                Some(binary_values)
+            } else {
+                None
+            }
+
         })
         .filter_map(|x| x)
         .map(|mut comb| {
