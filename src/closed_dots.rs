@@ -1,4 +1,3 @@
-use itertools;
 use ndarray::{Array, Array1, Array2, ArrayView, Axis, Ix1, Ix2, s};
 use osqp::{CscMatrix, Problem, Settings};
 use rayon::prelude::*;
@@ -12,6 +11,7 @@ pub fn ground_state_closed_1d<'a>(
     c_dd: ArrayView<'a, f64, Ix2>,
     c_dd_inv: ArrayView<'a, f64, Ix2>,
     threshold: f64,
+    polish: bool
 ) -> Array<f64, Ix2> {
     let n = v_g.shape()[0];
     let m = c_gd.shape()[0];
@@ -21,14 +21,14 @@ pub fn ground_state_closed_1d<'a>(
 
     rows.par_iter_mut().enumerate().for_each(|(j, result_row)| {
         let v_g_row = v_g.slice(s![j, ..]);
-        let n_charge = ground_state_closed_0d(v_g_row, n_charge, c_gd, c_dd, c_dd_inv, threshold);
+        let n_charge = ground_state_closed_0d(v_g_row, n_charge, c_gd, c_dd, c_dd_inv, threshold, polish);
         result_row.assign(&n_charge);
     });
     results_array
 }
 
 pub fn ground_state_closed_0d<'a>(v_g: ArrayView<f64, Ix1>, n_charge: u64,
-                                  c_gd: ArrayView<'a, f64, Ix2>, c_dd: ArrayView<'a, f64, Ix2>, c_dd_inv: ArrayView<'a, f64, Ix2>, threshold: f64) -> Array<f64, Ix1> {
+                                  c_gd: ArrayView<'a, f64, Ix2>, c_dd: ArrayView<'a, f64, Ix2>, c_dd_inv: ArrayView<'a, f64, Ix2>, threshold: f64, polish:bool) -> Array<f64, Ix1> {
     let analytical_solution = analytical_solution(c_gd, c_dd, v_g, n_charge);
     if analytical_solution.iter().all(|x| x >= &0.0 && x <= &(n_charge as f64)) {
         // the analytical solution is a valid charge configuration therefore we don't need to solve
@@ -37,7 +37,7 @@ pub fn ground_state_closed_0d<'a>(v_g: ArrayView<f64, Ix1>, n_charge: u64,
     } else {
         // the analytical solution is not a valid charge configuration
         // therefore we need to solve the constrained optimization problem
-        let mut problem = init_osqp_problem_closed(v_g, c_gd, c_dd_inv, n_charge);
+        let mut problem = init_osqp_problem_closed(v_g, c_gd, c_dd_inv, n_charge, polish);
         let result = problem.solve();
 
         // compute the continuous part of the ground state
@@ -58,7 +58,7 @@ fn analytical_solution(c_gd: ArrayView<f64, Ix2>, c_dd: ArrayView<f64, Ix2>, v_g
 
 #[allow(non_snake_case)]
 fn init_osqp_problem_closed<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f64, Ix2>,
-                                c_dd_inv: ArrayView<'a, f64, Ix2>, n_charge: u64) -> Problem {
+                                c_dd_inv: ArrayView<'a, f64, Ix2>, n_charge: u64, polish: bool) -> Problem {
     let dim = c_dd_inv.shape()[0];
     let P = CscMatrix::from(c_dd_inv.rows()).into_upper_tri();
 
@@ -91,9 +91,9 @@ fn init_osqp_problem_closed<'a>(v_g: ArrayView<f64, Ix1>, c_gd: ArrayView<'a, f6
     };
 
     let settings = Settings::default()
-        .alpha(1.0)
+        .alpha(1.)
         .verbose(false)
-        .polish(false);
+        .polish(polish);
     Problem::new(P, q, A, l, u, &settings).expect("failed to setup problem")
 }
 

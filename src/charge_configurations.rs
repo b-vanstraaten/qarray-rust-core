@@ -51,7 +51,6 @@ pub fn closed_charge_configurations(
 ) -> Array<f64, Ix2> {
 
     if threshold >= 1.0 {
-        println!("threshold is greater than 1.0, returning floor values");
         let floor_values = n_continuous.mapv(|x| x.floor() as u64);
         return _closed_charge_configurations(floor_values, n_charge).mapv(|x| x as f64);
     }
