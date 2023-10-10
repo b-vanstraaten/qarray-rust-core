@@ -1,3 +1,6 @@
+// Computes the ground state for open dots.
+
+
 use ndarray::{Array, Array1, Array2, ArrayView, Axis, Ix1, Ix2, s};
 use osqp::{CscMatrix, Problem, Settings};
 use rayon::prelude::*;
