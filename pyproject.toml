@@ -5,7 +5,7 @@ license = "MIT"
 license-file = "LICENSE.md"
 
 [project]
-name = "rusty_capacitance_model_core"
+name = "qarray-rust-core"
 requires-python = ">=3.10"
 authors = [
     {name = 'Barnaby van Straaten', email = 'barnaby.vanstraaten@kellogg.ox.ac.uk'}
@@ -21,7 +21,7 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = 'https://github.com/b-vanstraaten/rusty_capacitance_model_core'
+Homepage = 'https://github.com/b-vanstraaten/qarray-rust-core'
 
 
 

@@ -1,10 +1,10 @@
 [package]
-name = "rusty_capacitance_model_core"
+name = "qarray-rust-core"
 version = "1.4.1"
 edition = "2021"
 
 [lib]
-name = "rusty_capacitance_model_core"
+name = "qarray-rust-core"
 crate-type = ["cdylib"]
 
 [dependencies]
