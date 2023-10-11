@@ -5,7 +5,7 @@ license = "MIT"
 license-file = "LICENSE.md"
 
 [project]
-name = "qarray-rust-core"
+name = "qarray_rust_core"
 requires-python = ">=3.10"
 authors = [
     {name = 'Barnaby van Straaten', email = 'barnaby.vanstraaten@kellogg.ox.ac.uk'}

@@ -1,10 +1,10 @@
 [package]
-name = "qarray-rust-core"
-version = "1.4.1"
+name = "qarray_rust_core"
+version = "1.0.0"
 edition = "2021"
 
 [lib]
-name = "qarray-rust-core"
+name = "qarray_rust_core"
 crate-type = ["cdylib"]
 
 [dependencies]
