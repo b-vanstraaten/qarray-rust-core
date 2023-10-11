@@ -1,13 +1,11 @@
 use cached::proc_macro::cached;
-use ndarray::{Array, Array1, Array2, Axis, Ix2, s};
+use ndarray::{s, Array, Array1, Array2, Axis, Ix2};
 
 pub fn open_charge_configurations(n_continuous: Array1<f64>, threshold: f64) -> Array<f64, Ix2> {
-
     if threshold >= 1.0 {
         let floor_values = n_continuous.mapv(|x| x.floor() as u64);
         return _open_charge_configurations(floor_values).mapv(|x| x as f64);
     }
-
 
     let (floor_ceil_args, round_args): (Vec<usize>, Vec<usize>) = (0..n_continuous.len())
         .partition(|&i| (n_continuous[i].fract() - 0.5).abs() < threshold / 2.0);
@@ -34,22 +32,24 @@ pub fn open_charge_configurations(n_continuous: Array1<f64>, threshold: f64) -> 
         // Ensure that the shape of floor_charge_configurations and rounded_values is compatible for broadcasting.
         // The dimensions should either match or one of them should be 1.
         // For example, if floor_charge_configurations.shape() is (N, M) and rounded_values.len() is M, it should work.
-        charge_configurations.slice_mut(s![.., j]).assign(&floor_charge_configurations.slice(s![.., i]));
+        charge_configurations
+            .slice_mut(s![.., j])
+            .assign(&floor_charge_configurations.slice(s![.., i]));
     }
 
     for (i, &j) in round_args.iter().enumerate() {
-        charge_configurations.slice_mut(s![.., j]).fill(rounded_values[i]);
+        charge_configurations
+            .slice_mut(s![.., j])
+            .fill(rounded_values[i]);
     }
     charge_configurations.mapv(|x| x as f64)
 }
-
 
 pub fn closed_charge_configurations(
     n_continuous: Array1<f64>,
     n_charge: u64,
     threshold: f64,
 ) -> Array<f64, Ix2> {
-
     if threshold >= 1.0 {
         let floor_values = n_continuous.mapv(|x| x.floor() as u64);
         return _closed_charge_configurations(floor_values, n_charge).mapv(|x| x as f64);
@@ -59,7 +59,6 @@ pub fn closed_charge_configurations(
         .partition(|&i| (n_continuous[i].fract() - 0.5).abs() < threshold / 2.0);
 
     if floor_ceil_args.is_empty() {
-
         let rounded_values = n_continuous.mapv(|x| x.round());
         if rounded_values.map(|x| x.to_owned() as u64).sum() == n_charge {
             return rounded_values.insert_axis(Axis(0));
@@ -80,7 +79,8 @@ pub fn closed_charge_configurations(
         .map(|&i| n_continuous[i].round() as u64)
         .collect();
 
-    let floor_charge_configurations = _closed_charge_configurations(floor_values, n_charge- rounded_values.sum());
+    let floor_charge_configurations =
+        _closed_charge_configurations(floor_values, n_charge - rounded_values.sum());
     if floor_charge_configurations.is_empty() {
         let floor_values = n_continuous.mapv(|x| x.floor() as u64);
         return _closed_charge_configurations(floor_values, n_charge).mapv(|x| x as f64);
@@ -91,11 +91,15 @@ pub fn closed_charge_configurations(
     let mut charge_configurations = Array2::zeros((n_combinations, n_dot));
 
     for (i, &j) in floor_ceil_args.iter().enumerate() {
-        charge_configurations.slice_mut(s![.., j]).assign(&floor_charge_configurations.slice(s![.., i]));
+        charge_configurations
+            .slice_mut(s![.., j])
+            .assign(&floor_charge_configurations.slice(s![.., i]));
     }
 
     for (i, &j) in round_args.iter().enumerate() {
-        charge_configurations.slice_mut(s![.., j]).fill(rounded_values[i]);
+        charge_configurations
+            .slice_mut(s![.., j])
+            .fill(rounded_values[i]);
     }
     charge_configurations.mapv(|x| x as f64)
 }
@@ -115,14 +119,11 @@ fn _open_charge_configurations(floor_values: Array1<u64>) -> Array2<u64> {
         result.extend_from_slice(&configuration);
     }
     let rows = result.len() / n_dot as usize;
-    Array2::from_shape_vec((rows, n_dot as usize), result).unwrap()
+    Array2::from_shape_vec((rows, n_dot as usize), result).expect("Failed to reshape array")
 }
 
 #[cached]
-fn _closed_charge_configurations(
-    floor_values: Array1<u64>,
-    n_charge: u64,
-) -> Array2<u64> {
+fn _closed_charge_configurations(floor_values: Array1<u64>, n_charge: u64) -> Array2<u64> {
     let n_dot = floor_values.len() as u64;
     let floor_sum: u64 = floor_values.sum();
 
@@ -148,5 +149,5 @@ fn _closed_charge_configurations(
         }
     }
     let rows = result.len() / n_dot as usize;
-    Array2::from_shape_vec((rows, n_dot as usize), result).unwrap()
+    Array2::from_shape_vec((rows, n_dot as usize), result).expect("Failed to reshape array")
 }
