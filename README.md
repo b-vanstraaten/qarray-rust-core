@@ -1,6 +1,6 @@
-# Rusty Capacitance Model Core
+# qarray-rust-core
 
-![GitHub Workflow Status](https://github.com/b-vanstraaten/rusty_capacitance_model_core/workflows/CI/badge.svg)
+![GitHub Workflow Status](https://github.com/b-vanstraaten/qarray-rust-core/workflows/CI/badge.svg)
 ![PyPI](https://img.shields.io/pypi/v/rusty-capacitance-model-core)
 
 ![Rust logo](https://www.rust-lang.org/static/images/rust-logo-blk.svg)
@@ -22,7 +22,7 @@
 Install Quantum Dot Constant Capacitance Simulator using pip:
 
 ```bash
-pip install rusty-capacitance-model-core
+pip install qarray-rust-core
 ```
 
 
@@ -36,7 +36,7 @@ This package exposes two functions to be called from python:
 The python code to call these functions is as follows:
 
    ```python
-   from rusty_capacitance_model_core import (ground_state_open, ground_state_closed)
+   from qarray-rust-core import (ground_state_open, ground_state_closed)
    import numpy as np 
    
    # the dot-dot capacitance matrix
