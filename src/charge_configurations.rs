@@ -42,7 +42,7 @@ pub fn open_charge_configurations(n_continuous: Array1<f64>, threshold: f64) -> 
             .slice_mut(s![.., j])
             .fill(rounded_values[i]);
     }
-    charge_configurations.mapv(|x| x as f64)
+    return charge_configurations.mapv(|x| x as f64);
 }
 
 pub fn closed_charge_configurations(
@@ -101,7 +101,7 @@ pub fn closed_charge_configurations(
             .slice_mut(s![.., j])
             .fill(rounded_values[i]);
     }
-    charge_configurations.mapv(|x| x as f64)
+    return charge_configurations.mapv(|x| x as f64);
 }
 
 #[cached]
@@ -149,5 +149,5 @@ fn _closed_charge_configurations(floor_values: Array1<u64>, n_charge: u64) -> Ar
         }
     }
     let rows = result.len() / n_dot as usize;
-    Array2::from_shape_vec((rows, n_dot as usize), result).expect("Failed to reshape array")
+    return Array2::from_shape_vec((rows, n_dot as usize), result).expect("Failed to reshape array");
 }
