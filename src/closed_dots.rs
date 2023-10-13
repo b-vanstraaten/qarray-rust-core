@@ -108,7 +108,7 @@ fn init_osqp_problem_closed<'a>(
         Axis(0),
         &[
             Array1::<f64>::from_elem(1, n_charge as f64).view(),
-            Array1::<f64>::from_elem(dim, 100.).view(),
+            Array1::<f64>::from_elem(dim, n_charge as f64).view(),
         ],
     )
     .expect("failed to concatenate arrays");
