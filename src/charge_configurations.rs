@@ -50,6 +50,7 @@ pub fn closed_charge_configurations(
     n_charge: u64,
     threshold: f64,
 ) -> Array<f64, Ix2> {
+    // if the threshold is greater than 1.0 we can return all configurations without worrying about rounding
     if threshold >= 1.0 {
         let floor_values = n_continuous.mapv(|x| x.floor() as u64);
         return _closed_charge_configurations(floor_values, n_charge).mapv(|x| x as f64);
@@ -81,9 +82,10 @@ pub fn closed_charge_configurations(
 
     let floor_charge_configurations =
         _closed_charge_configurations(floor_values, n_charge - rounded_values.sum());
+
+    // a recursively calling closed_charge_configurations with double the threshold if the floor_charge_configurations is empty
     if floor_charge_configurations.is_empty() {
-        let floor_values = n_continuous.mapv(|x| x.floor() as u64);
-        return _closed_charge_configurations(floor_values, n_charge).mapv(|x| x as f64);
+        return closed_charge_configurations(n_continuous, n_charge, f64::min(2. * threshold, 1.0));
     }
 
     let n_dot = n_continuous.len();

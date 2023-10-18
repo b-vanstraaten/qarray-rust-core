@@ -72,7 +72,7 @@ fn init_osqp_problem_open<'a>(
     let l_array = Array1::<f64>::zeros(dim);
     let l = l_array.as_slice().expect("failed to get slice of l");
 
-    let u_array = Array1::<f64>::from_elem(dim, 100.);
+    let u_array = Array1::<f64>::from_elem(dim, f64::MAX);
     let u = u_array.as_slice().expect("failed to get slice of u");
     let A = {
         let identity = Array2::<f64>::eye(dim);
