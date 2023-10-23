@@ -3,6 +3,7 @@ use pyo3::prelude::{pymodule, PyModule, PyResult, Python};
 
 mod charge_configurations;
 mod closed_dots;
+mod helper_functions;
 mod open_dots;
 
 #[pymodule]
@@ -36,6 +37,7 @@ fn qarray_rust_core(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     }
 
     #[pyfn(m)]
+    #[allow(non_snake_case)]
     fn ground_state_open<'py>(
         py: Python<'py>,
         v_g: PyReadonlyArray2<f64>,
@@ -43,16 +45,19 @@ fn qarray_rust_core(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         c_dd_inv: PyReadonlyArray2<f64>,
         threshold: f64,
         polish: bool,
+        T: f64,
     ) -> &'py PyArray2<f64> {
         let v_g = v_g.as_array();
         let c_gd = c_gd.as_array();
         let c_dd_inv = c_dd_inv.as_array();
 
-        let results_array = open_dots::ground_state_open_1d(v_g, c_gd, c_dd_inv, threshold, polish);
+        let results_array =
+            open_dots::ground_state_open_1d(v_g, c_gd, c_dd_inv, threshold, polish, T);
         results_array.into_pyarray(py)
     }
 
     #[pyfn(m)]
+    #[allow(non_snake_case)]
     fn ground_state_closed<'py>(
         py: Python<'py>,
         v_g: PyReadonlyArray2<f64>,
@@ -62,6 +67,7 @@ fn qarray_rust_core(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         c_dd_inv: PyReadonlyArray2<f64>,
         threshold: f64,
         polish: bool,
+        T: f64,
     ) -> &'py PyArray2<f64> {
         let v_g = v_g.as_array();
         let c_gd = c_gd.as_array();
@@ -69,7 +75,7 @@ fn qarray_rust_core(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let c_dd_inv = c_dd_inv.as_array();
 
         let results_array = closed_dots::ground_state_closed_1d(
-            v_g, n_charge, c_gd, c_dd, c_dd_inv, threshold, polish,
+            v_g, n_charge, c_gd, c_dd, c_dd_inv, threshold, polish, T,
         );
         results_array.into_pyarray(py)
     }

@@ -5,7 +5,9 @@ use osqp::{CscMatrix, Problem, Settings};
 use rayon::prelude::*;
 
 use crate::charge_configurations::closed_charge_configurations;
+use crate::helper_functions::{hard_argmin, soft_argmin};
 
+#[allow(non_snake_case)]
 pub fn ground_state_closed_1d<'a>(
     v_g: ArrayView<'a, f64, Ix2>,
     n_charge: u64,
@@ -14,6 +16,7 @@ pub fn ground_state_closed_1d<'a>(
     c_dd_inv: ArrayView<'a, f64, Ix2>,
     threshold: f64,
     polish: bool,
+    T: f64,
 ) -> Array<f64, Ix2> {
     let n = v_g.shape()[0];
     let m = c_gd.shape()[0];
@@ -23,13 +26,15 @@ pub fn ground_state_closed_1d<'a>(
 
     rows.par_iter_mut().enumerate().for_each(|(j, result_row)| {
         let v_g_row = v_g.slice(s![j, ..]);
-        let n_charge =
-            ground_state_closed_0d(v_g_row, n_charge, c_gd, c_dd, c_dd_inv, threshold, polish);
+        let n_charge = ground_state_closed_0d(
+            v_g_row, n_charge, c_gd, c_dd, c_dd_inv, threshold, polish, T,
+        );
         result_row.assign(&n_charge);
     });
     results_array
 }
 
+#[allow(non_snake_case)]
 pub fn ground_state_closed_0d<'a>(
     v_g: ArrayView<f64, Ix1>,
     n_charge: u64,
@@ -38,6 +43,7 @@ pub fn ground_state_closed_0d<'a>(
     c_dd_inv: ArrayView<'a, f64, Ix2>,
     threshold: f64,
     polish: bool,
+    T: f64,
 ) -> Array<f64, Ix1> {
     let analytical_solution = analytical_solution(c_gd, c_dd, v_g, n_charge);
     if analytical_solution
@@ -53,6 +59,7 @@ pub fn ground_state_closed_0d<'a>(
             v_g,
             n_charge,
             threshold,
+            T,
         );
     } else {
         // the analytical solution is not a valid charge configuration
@@ -64,7 +71,7 @@ pub fn ground_state_closed_0d<'a>(
         let n_continuous =
             Array1::<f64>::from(result.x().expect("failed to solve problem").to_owned());
 
-        return compute_argmin_closed(n_continuous, c_dd_inv, c_gd, v_g, n_charge, threshold);
+        return compute_argmin_closed(n_continuous, c_dd_inv, c_gd, v_g, n_charge, threshold, T);
     }
 }
 
@@ -126,6 +133,7 @@ fn init_osqp_problem_closed<'a>(
     Problem::new(P, q, A, l, u, &settings).expect("failed to setup problem")
 }
 
+#[allow(non_snake_case)]
 fn compute_argmin_closed(
     n_continuous: Array1<f64>,
     c_dd_inv: ArrayView<f64, Ix2>,
@@ -133,21 +141,13 @@ fn compute_argmin_closed(
     v_g: ArrayView<f64, Ix1>,
     n_charge: u64,
     threshold: f64,
+    T: f64,
 ) -> Array1<f64> {
     let n_list = closed_charge_configurations(n_continuous, n_charge, threshold);
+    let vg_dash = c_gd.dot(&v_g);
 
-    // type conversion from i64 to f64
-    let n_list = n_list.mapv(|x| x as f64);
-
-    let n_min = n_list
-        .outer_iter()
-        .map(|x| x.to_owned() - &c_gd.dot(&v_g))
-        .map(|x| x.dot(&c_dd_inv.dot(&x)))
-        .enumerate()
-        .min_by(|(_, x), (_, y)| x.partial_cmp(y).expect("failed to compare floats"))
-        .map(|(idx, _)| n_list.index_axis(Axis(0), idx))
-        .expect("failed to compute argmin")
-        .to_owned();
-
-    return n_min;
+    match T > 0.0 {
+        false => hard_argmin(n_list, c_dd_inv, vg_dash),
+        true => soft_argmin(n_list, c_dd_inv, vg_dash, T),
+    }
 }
