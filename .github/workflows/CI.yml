@@ -86,7 +86,7 @@ jobs:
           path: dist
 
   macos13:
-    runs-on: macos-13
+    runs-on: macos-14
     strategy:
       matrix:
         python-version: [ '3.10', '3.11', '3.12' ]
