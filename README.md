@@ -58,8 +58,8 @@ The python code to call these functions is as follows:
    n_charge = 3 # the number of changes to confine in the quantum dot array for the closed case 
    threshold = 1 # threshold to avoid having to consider all possible charge states, setting it 1 is always correct, however has a computatinal cost. 
    
-   n_open = ground_state_open(vg, cgd, cdd_inv, threshold)
-   n_closed = ground_state_closed(vg, n_charge, cgd, cdd, cdd_inv, threshold)
+   n_open = ground_state_open(vg, cgd, cdd_inv, threshold, T = 0)
+   n_closed = ground_state_closed(vg, n_charge, cgd, cdd, cdd_inv, threshold, T = 0)
    ```
 **It is not intended the user ever call these functions directly.**
 

@@ -5,6 +5,7 @@ mod charge_configurations;
 mod closed_dots;
 mod helper_functions;
 mod open_dots;
+mod brute_force_open;
 
 #[pymodule]
 fn qarray_rust_core(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
@@ -55,7 +56,7 @@ fn qarray_rust_core(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
             open_dots::ground_state_open_1d(v_g, c_gd, c_dd_inv, threshold, polish, T);
         results_array.into_pyarray(py)
     }
-
+    
     #[pyfn(m)]
     #[allow(non_snake_case)]
     fn ground_state_closed<'py>(
