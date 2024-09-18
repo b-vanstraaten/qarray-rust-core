@@ -1,4 +1,3 @@
-use cached::proc_macro::cached;
 use ndarray::{s, Array, Array1, Array2, Axis, Ix2};
 
 pub fn open_charge_configurations(n_continuous: Array1<f64>, threshold: f64) -> Array<f64, Ix2> {
@@ -106,7 +105,7 @@ pub fn closed_charge_configurations(
     return charge_configurations.mapv(|x| x as f64);
 }
 
-#[cached(size = 1024)]
+// #[cached(size = 16)]
 fn _open_charge_configurations(floor_values: Array1<u64>) -> Array2<u64> {
     let n_dot = floor_values.len() as u64;
     let num_combinations = 1u64 << n_dot;
@@ -124,7 +123,7 @@ fn _open_charge_configurations(floor_values: Array1<u64>) -> Array2<u64> {
     Array2::from_shape_vec((rows, n_dot as usize), result).expect("Failed to reshape array")
 }
 
-#[cached(size = 1024)]
+// #[cached(size = 16)]
 fn _closed_charge_configurations(floor_values: Array1<u64>, n_charge: u64) -> Array2<u64> {
     let n_dot = floor_values.len() as u64;
     let floor_sum: u64 = floor_values.sum();
