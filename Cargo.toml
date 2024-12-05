@@ -8,16 +8,11 @@ name = "qarray_rust_core"
 crate-type = ["cdylib"]
 
 [dependencies]
-ndarray = "0.15.6"
-numpy = "0.20.0"
-itertools = "0.12.0"
+ndarray = "0.16.1"
+numpy = "0.23.0"
 rayon = "1.10.0"
 osqp = "0.6.2"
-cached= "0.49.2"
-
-[dependencies.pyo3]
-version = "0.20.0"
-features = ["extension-module"]
+pyo3 = { version = "0.23.3", features = ["extension-module"] }
 
 [profile.release]
 codegen-units = 1
