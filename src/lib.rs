@@ -3,6 +3,7 @@ use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 
 mod charge_configurations;
+
 mod closed_dots;
 mod helper_functions;
 mod open_dots;
