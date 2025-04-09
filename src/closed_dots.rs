@@ -129,7 +129,7 @@ fn init_osqp_problem_closed<'a>(
         CscMatrix::from(A.rows())
     };
 
-    let settings = Settings::default().verbose(false).polish(polish);
+    let settings = Settings::default().verbose(false).polishing(polish);
     Problem::new(P, q, A, l, u, &settings).expect("failed to setup problem")
 }
 

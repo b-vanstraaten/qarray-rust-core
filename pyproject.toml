@@ -1,14 +1,15 @@
 [build-system]
-requires = ["maturin>=0.14,<0.15"]
+requires = ["maturin>=0.18,<0.19"]
 build-backend = "maturin"
-license = "MIT"
+license = "GNU"
 license-file = "LICENSE.md"
 
 [project]
 name = "qarray_rust_core"
 requires-python = ">=3.10"
+dynamic = ["version"]
 authors = [
-    {name = 'Barnaby van Straaten', email = 'barnaby.vanstraaten@kellogg.ox.ac.uk'}
+    {name = 'Barnaby van Straaten', email = 'b.l.vanstraaten@tudelft.nl'}
 ]
 
 operating-systems = ["any"]

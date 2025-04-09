@@ -84,7 +84,7 @@ fn init_osqp_problem_open<'a>(
         CscMatrix::from(identity.rows())
     };
 
-    let settings = Settings::default().verbose(false).polish(polish);
+    let settings = Settings::default().verbose(false).polishing(polish);
     return Problem::new(P, q, A, l, u, &settings).expect("failed to setup problem");
 }
 
