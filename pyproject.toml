@@ -1,5 +1,5 @@
 [build-system]
-requires = ["maturin>=0.18,<0.19"]
+requires = ["maturin==0.18.3"]
 build-backend = "maturin"
 license = "GNU"
 license-file = "LICENSE.md"
