@@ -24,8 +24,6 @@ classifiers = [
 [project.urls]
 Homepage = 'https://github.com/b-vanstraaten/qarray-rust-core'
 
-
-
 [tool.maturin]
 features = ["pyo3/extension-module"]
 
